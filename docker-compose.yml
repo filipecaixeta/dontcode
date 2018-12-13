@@ -1,0 +1,28 @@
+version: "3.5"
+
+services:
+    frontend:
+        container_name: frontend
+        build: frontend
+        ports:
+            - "80:80"
+        volumes:
+            - "./frontend:/app/"
+        environment:
+            - PORT=80
+            - HOST=0.0.0.0
+            - BACKEND_SOCKETIO=http://localhost:8080
+    backend:
+        container_name: backend
+        build: backend
+        ports:
+            - "8080:8080"
+        volumes:
+            - "./backend:/app/"
+        environment:
+            - PORT=8080
+            - HOST=0.0.0.0
+    pubsub:
+        image: library/redis:4-alpine3.8
+        ports:
+            - "6379:6379"

@@ -1,0 +1,29 @@
+{
+  "name": "dontcode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.ts",
+  "dependencies": {
+    "@types/node": "^10.12.12",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.7",
+    "socket.io": "^2.2.0",
+    "socket.io-redis": "^5.2.0",
+    "socketio": "^1.0.0",
+    "ts-node": "^7.0.1",
+    "ws": "^6.1.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.16.0",
+    "@types/node": "^10.12.12",
+    "@types/ws": "^6.0.1",
+    "typescript": "^3.2.1"
+  },
+  "scripts": {
+    "dev": "nodemon --watch \"src/\" --exec \"ts-node src/main.ts\" -e ts",
+    "build": "tsc",
+    "prod": "npm run build && node dist/main.js"
+  },
+  "author": "Filipe Caixeta",
+  "license": "ISC"
+}
