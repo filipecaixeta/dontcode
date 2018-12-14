@@ -1,4 +1,4 @@
-version: "3.5"
+version: "3"
 
 services:
     frontend:
@@ -8,6 +8,7 @@ services:
             - "80:80"
         volumes:
             - "./frontend:/app/"
+            - "/app/node_modules"
         environment:
             - PORT=80
             - HOST=0.0.0.0
@@ -19,6 +20,7 @@ services:
             - "8080:8080"
         volumes:
             - "./backend:/app/"
+            - "/app/node_modules"
         environment:
             - PORT=8080
             - HOST=0.0.0.0

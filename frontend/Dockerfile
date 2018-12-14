@@ -8,4 +8,6 @@ COPY package.json /app
 
 RUN yarn
 
+RUN pwd && ls .
+
 CMD [ "npm", "run", "dev" ]
