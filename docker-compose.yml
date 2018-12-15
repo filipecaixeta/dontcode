@@ -25,6 +25,10 @@ services:
             - PORT=8080
             - HOST=0.0.0.0
     pubsub:
-        image: library/redis:4-alpine3.8
+        image: library/redis:5-alpine3.8
+        command: redis-server /usr/local/etc/redis/redis.conf
         ports:
             - "6379:6379"
+        volumes:
+            - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+            - ./redis/data:/data

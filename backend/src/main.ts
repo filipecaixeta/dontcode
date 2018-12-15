@@ -12,6 +12,7 @@ wss.set('origins', '*:*')
 const redisAdapter = require('socket.io-redis')
 wss.adapter(redisAdapter({ host: 'pubsub', port: 6379 }))
 
+
 wss.on('connection', (ws: any) => {
 
     ws.on('room', (room: string) => {
@@ -23,14 +24,14 @@ wss.on('connection', (ws: any) => {
             ws.emit('get', text)
         })
         ws.emit('room', 'joined')
-    });
+    })
     ws.on('updateText', (data: any) => {
         let rooms = Object.keys(wss.sockets.adapter.sids[ws.id])
         // console.log(rooms)
         let room = rooms[rooms.length-1]
         redisclient.set(room, data.text, 'EX', 60*60*24*30)
         wss.to(room).emit('updateText', data)
-    });
+    })
 })
 
 server.listen(process.env.PORT, () => {
