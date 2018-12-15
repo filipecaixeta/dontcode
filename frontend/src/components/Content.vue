@@ -17,7 +17,8 @@ export default {
       editor: null,
       joined: false,
       ignoreChange: false,
-      room: ''
+      room: '',
+      id: ''
     }
   },
   mounted() {
@@ -39,6 +40,7 @@ export default {
   },
   sockets: {
     connect() {
+      this.id = this.$socket.id
       this.$socket.emit('room', this.room)
       console.log("Connected to backend")
     },
@@ -53,10 +55,12 @@ export default {
         this.joined = true
       }
     },
-    updateText(text) {
+    updateText(data) {
       this.ignoreChange = true
-      if (text !== this.editor.getValue()) {
-        this.editor.getSession().setValue(text);
+      if (data.id !== this.id) {
+        if (data.text !== this.editor.getValue()) {
+          this.editor.getSession().setValue(data.text)
+        }
       }
       this.ignoreChange = false
     }
@@ -64,7 +68,10 @@ export default {
   methods: {
     editorOnChange(delta) {
       if (this.joined && !this.ignoreChange) {
-        this.$socket.emit('updateText', this.editor.getValue())
+        this.$socket.emit('updateText', {
+          'text': this.editor.getValue(),
+          'id': this.id
+        })
       }
     }
   },
