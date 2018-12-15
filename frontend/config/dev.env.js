@@ -4,5 +4,5 @@ const prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  BACKEND_SOCKETIO: 'http://localhost'
+  BACKEND_SOCKETIO: 'http://localhost:8080'
 })

@@ -59,7 +59,9 @@ export default {
       this.ignoreChange = true
       if (data.id !== this.id) {
         if (data.text !== this.editor.getValue()) {
+          let cursor = this.editor.getSession().selection.getCursor()
           this.editor.getSession().setValue(data.text)
+          this.editor.moveCursorToPosition(cursor)
         }
       }
       this.ignoreChange = false
