@@ -17,8 +17,9 @@ export default {
       editor: null,
       joined: false,
       ignoreChange: false,
-      room: '',
-      id: ''
+      room: null,
+      id: null,
+      text: ''
     }
   },
   mounted() {
@@ -34,7 +35,7 @@ export default {
     this.editor.getSession().setTabSize(4);
     this.editor.setFontSize(18);
     this.editor.setShowPrintMargin(false);
-    this.editor.getSession().setValue("");
+    this.editor.getSession().setValue(this.text);
 
     this.editor.session.on('change', this.editorOnChange);
   },
@@ -45,9 +46,12 @@ export default {
       console.log("Connected to "+this.room)
     },
     get(text) {
-      this.editor.getSession().setValue(text);
+      this.text = text
+      this.editor.getSession().setValue(this.text);
     },
     disconnect() {
+      this.id = null
+      this.room = null
       console.log("Disconnected from "+this.room)
     },
     room(status) {
@@ -56,11 +60,13 @@ export default {
       }
     },
     updateText(data) {
+      // console.log(data)
       this.ignoreChange = true
-      if (data.id !== this.id) {
+      if (data.id !== this.id && this.id && this.room) {
         if (data.text !== this.editor.getValue()) {
+          this.text = data.text
           let cursor = this.editor.getSession().selection.getCursor()
-          this.editor.getSession().setValue(data.text)
+          this.editor.getSession().setValue(this.text)
           this.editor.moveCursorToPosition(cursor)
         }
       }
