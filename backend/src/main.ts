@@ -20,7 +20,6 @@ wss.on('connection', (ws: any) => {
             if (text === null) {
                 text = ""
             }
-            console.log("GET FROM DB", room, text)
             wss.emit('get', text)
         })
         wss.emit('room', 'joined')
@@ -29,7 +28,6 @@ wss.on('connection', (ws: any) => {
         let rooms = Object.keys(wss.sockets.adapter.sids[ws.id])
         let room = rooms[rooms.length-1]
         redisclient.set(room, data.text, 'EX', 60*60*24*30)
-        console.log("SET DB", room, data.text)
         wss.to(room).emit('updateText', data)
     });
 })

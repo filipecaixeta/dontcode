@@ -42,13 +42,13 @@ export default {
     connect() {
       this.id = this.$socket.id
       this.$socket.emit('room', this.room)
-      console.log("Connected to backend")
+      console.log("Connected to "+this.room)
     },
     get(text) {
       this.editor.getSession().setValue(text);
     },
     disconnect() {
-      console.log("Disconnected from backend")
+      console.log("Disconnected from "+this.room)
     },
     room(status) {
       if (status === 'joined') {
@@ -78,7 +78,6 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
   #editor, .ace_editor {
     top: 0;
