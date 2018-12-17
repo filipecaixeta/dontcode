@@ -42,6 +42,7 @@ export default {
   sockets: {
     connect() {
       this.id = this.$socket.id
+      this.room = this.$router.history.current.fullPath
       this.$socket.emit('room', this.room)
       console.log("Connected to "+this.room)
     },
@@ -50,9 +51,9 @@ export default {
       this.editor.getSession().setValue(this.text);
     },
     disconnect() {
+      console.log("Disconnected from "+this.room)
       this.id = null
       this.room = null
-      console.log("Disconnected from "+this.room)
     },
     room(status) {
       if (status === 'joined') {

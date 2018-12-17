@@ -5,7 +5,9 @@
   "main": "main.ts",
   "dependencies": {
     "@types/node": "^10.12.12",
+    "bluebird": "^3.5.3",
     "express": "^4.16.4",
+    "ioredis": "^4.3.0",
     "nodemon": "^1.18.7",
     "socket.io": "^2.2.0",
     "socket.io-redis": "^5.2.0",
