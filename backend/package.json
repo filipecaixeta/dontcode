@@ -4,6 +4,7 @@
   "description": "",
   "main": "main.ts",
   "dependencies": {
+    "@types/ioredis": "^4.0.4",
     "@types/node": "^10.12.12",
     "bluebird": "^3.5.3",
     "express": "^4.16.4",

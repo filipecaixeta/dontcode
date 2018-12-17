@@ -48,7 +48,9 @@ export default {
     },
     get(text) {
       this.text = text
+      this.ignoreChange = true
       this.editor.getSession().setValue(this.text);
+      this.ignoreChange = false
     },
     disconnect() {
       console.log("Disconnected from "+this.room)

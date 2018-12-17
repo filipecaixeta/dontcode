@@ -12,7 +12,6 @@ services:
         environment:
             - PORT=80
             - HOST=0.0.0.0
-            - BACKEND_SOCKETIO=http://localhost:8080
     backend:
         container_name: backend
         build: backend
