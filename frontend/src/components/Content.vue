@@ -16,15 +16,12 @@
           <icon name="circle" v-if="node.data.isModified"></icon>
       </template>
     </sl-vue-tree> -->
-    <div id="editor" height="100%"></div>
+    <codemirror id="editor" v-model="text" :options="cmOptions" @input="editorOnChange"></codemirror>
   </div>
 </template>
 
 <script>
-import CodeFlask from 'codeflask'
 import slVueTree from 'sl-vue-tree'
-// import 'ace-builds';
-// import 'ace-builds/webpack-resolver';
 
 var nodes = [
     {title: 'Item1', isLeaf: true},
@@ -40,43 +37,36 @@ var nodes = [
 
 export default {
   component: {
-    slVueTree
+    slVueTree,
   },
   created() {
     this.room = this.$router.history.current.fullPath.replace(/\/$/,'')
+  },
+  computed: {
+    codemirror() {
+      return this.$refs.myCm.codemirror
+    }
   },
   data () {
     return {
       nodes: nodes,
       editor: null,
       joined: false,
-      ignoreChange: false,
       room: null,
       id: null,
-      text: ''
+      text: '',
+      cmOptions: {
+        tabSize: 4,
+        styleActiveLine: false,
+        lineNumbers: true,
+        styleSelectedText: false,
+        line: true,
+        showCursorWhenSelecting: true,
+        theme: "monokai"
+      }
     }
   },
   mounted() {
-    this.editor = new CodeFlask('#editor', {
-      lineNumbers: true
-    })
-    console.log(this.editor)
-    // this.editor = ace.edit("editor", {
-    //   // theme: "ace/theme/monokai",
-    //   minLines: 10,
-    //   fontSize: 18,
-    //   height: "100%"
-    //   // autoScrollEditorIntoView: true
-    // });
-		// this.editor.$blockScrolling = Infinity;
-    // this.editor.getSession().setUseWrapMode(true);
-    // this.editor.getSession().setTabSize(4);
-    // this.editor.setFontSize(18);
-    // this.editor.setShowPrintMargin(false);
-    // this.editor.getSession().setValue(this.text);
-
-    // this.editor.session.on('change', this.editorOnChange);
-    this.editor.onUpdate(this.editorOnChange)
   },
   sockets: {
     connect() {
@@ -87,11 +77,6 @@ export default {
     },
     get(text) {
       this.text = text
-      this.ignoreChange = true
-      this.editor.updateCode(this.text)
-      this.editor.createLineNumbers()
-      this.editor.updateLineNumbersCount()
-      this.ignoreChange = false
     },
     disconnect() {
       console.log("Disconnected from "+this.room)
@@ -104,28 +89,20 @@ export default {
       }
     },
     updateText(data) {
-      // console.log(data)
-      this.ignoreChange = true
       if (data.id !== this.id && this.id && this.room) {
-        if (data.text !== this.editor.getCode()) {
-          this.text = data.text
-          // let cursor = this.editor.getSession().selection.getCursor()
-          this.editor.updateCode(this.text)
-          this.editor.createLineNumbers()
-          this.editor.updateLineNumbersCount()
-          // this.editor.moveCursorToPosition(cursor)
-        }
+        this.text = data.text
       }
-      this.ignoreChange = false
     }
   },
   methods: {
-    editorOnChange(delta) {
+    editorOnChange(text) {
       if (this.joined && !this.ignoreChange) {
+        this.ignoreChange = true
         this.$socket.emit('updateText', {
-          'text': this.editor.getCode(),
+          'text': this.text,
           'id': this.id
         })
+        this.ignoreChange = false
       }
     }
   },
@@ -133,13 +110,20 @@ export default {
 </script>
 
 <style>
-  #editor, .ace_editor {
+
+  #editor {
     top: 0;
     left: 100px;
     right: 0;
     bottom: 0;
     position: fixed !important;
+    overflow: hidden;
   }
+  .CodeMirror {
+    border: 1px solid #eee;
+    height: 100%;
+  }
+
   sl-vue-tree {
     position: fixed !important;
     top: 0;
