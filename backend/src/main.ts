@@ -89,7 +89,10 @@ wss.on('connection', (ws: any) => {
     ws.on('disconnecting', () => {
         let room = getRoom(ws, 'page')
         let root_room = getRoom(ws, 'root')
-        let clientNumber = wss.sockets.adapter.rooms[room].length
+        let clientNumber = 1
+        if (wss.sockets.adapter.rooms[room]) {
+            clientNumber = wss.sockets.adapter.rooms[room].length
+        }
         // Remove room from filesList if there is no other client and no text
         if (clientNumber <= 1) {
             redisclient.get(room).then((text: string|null) => {
