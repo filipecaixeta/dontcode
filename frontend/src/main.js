@@ -11,7 +11,7 @@ Vue.use(VueCodeMirror)
 Vue.config.productionTip = false
 
 Vue.use(new VueSocketIO({
-  debug: false,
+  debug: true,
   connection: BACKEND_SOCKETIO
 }))
 

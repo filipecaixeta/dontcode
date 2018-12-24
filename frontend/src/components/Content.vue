@@ -1,21 +1,30 @@
 <template>
   <div class="hello">
-    <!-- <sl-vue-tree v-model="nodes">
-
-      <template slot="toggle" slot-scope="{ node }">
-          <span v-if="!node.isLeaf">
-            <icon name="caret-right" v-if="!node.isExpanded"></icon>
-            <icon name="caret-down"  v-if="node.isExpanded"></icon>
-          </span>
-      </template>
+    <sl-vue-tree v-model="nodes"
+                id="filesTree"
+                isDraggable="false"
+                @nodeclick="onFileClick">
 
       <template slot="title" slot-scope="{ node }">
-          <icon name="file" v-if="node.isLeaf"></icon> {{ node.title }} </template>
+          <span class="item-icon">
+            <i class="fa fa-file" v-if="node.isLeaf"></i>
+            <i class="fa fa-folder" v-if="!node.isLeaf"></i>
+          </span>
 
-      <template slot="sidebar" slot-scope="{ node }">
-          <icon name="circle" v-if="node.data.isModified"></icon>
-      </template>
-    </sl-vue-tree> -->
+          {{ node.title }}
+        </template>
+
+        <template slot="toggle" slot-scope="{ node }">
+          <span v-if="!node.isLeaf">
+            <i v-if="node.isExpanded" class="fa fa-chevron-down"></i>
+            <i v-if="!node.isExpanded" class="fa fa-chevron-right"></i>
+          </span>
+        </template>
+
+        <template slot="draginfo">
+
+        </template>
+    </sl-vue-tree>
     <codemirror id="editor" v-model="text" :options="cmOptions" @input="editorOnChange"></codemirror>
   </div>
 </template>
@@ -23,36 +32,80 @@
 <script>
 import slVueTree from 'sl-vue-tree'
 
-var nodes = [
-    {title: 'Item1', isLeaf: true},
-    {title: 'Item2', isLeaf: true, data: { visible: false }},
-    {title: 'Folder1'},
-    {
-      title: 'Folder2', isExpanded: true, children: [
-        {title: 'Item3', isLeaf: true},
-        {title: 'Item4', isLeaf: true, data: { isModified: true }}
-      ]
+function filesTree(root, files) {
+  if (files.length==0) {
+    return
+  }
+  else {
+    let file = files.shift()
+    root[file] = root[file] || {}
+    filesTree(root[file], files)
+  }
+}
+
+function filesTree2List(tree) {
+  let files = Object.keys(tree)
+  let ret = []
+  for (let file of files) {
+    if (Object.keys(tree[file]).length===0) {
+      ret.push({title: file, isLeaf: true, isDraggable: false})
     }
-];
+    else {
+      let children = []
+      for (let x of Object.keys(tree[file])) {
+        if (Object.keys(tree[file][x]).length===0) {
+          children.push({title: x, isLeaf: true, isDraggable: false})
+        }
+        else {
+          children.push({title: x, isLeaf: false, isDraggable: false, children: filesTree2List(tree[file][x])})
+        }
+      }
+      ret.push({title: file, isLeaf: false, isDraggable: false, children: children, data: {'teste': 'lol'}})
+    }
+  }
+  return ret
+}
+
+function getPath(nodes, pos) {
+  let path = ""
+  for (let p of pos) {
+    if (nodes.constructor === Array) {
+      nodes = nodes[p]
+    }
+    else if (!nodes.isLeaf) {
+      nodes = nodes.children[p]
+    }
+    path += nodes.title+'/'
+  }
+  return path.substring(0, path.length-1)
+}
 
 export default {
-  component: {
-    slVueTree,
+  components: {
+    slVueTree
   },
   created() {
-    this.room = this.$router.history.current.fullPath.replace(/\/$/,'')
+
   },
   computed: {
     codemirror() {
       return this.$refs.myCm.codemirror
+    },
+    room() {
+      if (!this.id || !this.joined) {
+        return null
+      }
+      return this.roomName
+    },
+    roomName() {
+      return this.$router.history.current.fullPath.replace(/\/$/,'').slice(1)
     }
   },
   data () {
     return {
-      nodes: nodes,
+      nodes: [],
       editor: null,
       joined: false,
-      room: null,
       id: null,
       text: '',
       cmOptions: {
@@ -67,13 +120,12 @@ export default {
     }
   },
   mounted() {
+
   },
   sockets: {
     connect() {
       this.id = this.$socket.id
-      this.room = this.$router.history.current.fullPath.replace(/\/$/,'')
-      this.$socket.emit('room', this.room)
-      console.log("Connected to "+this.room)
+      this.$socket.emit('room', this.roomName)
     },
     get(text) {
       this.text = text
@@ -81,15 +133,23 @@ export default {
     disconnect() {
       console.log("Disconnected from "+this.room)
       this.id = null
-      this.room = null
+      this.joined = null
     },
     room(status) {
       if (status === 'joined') {
         this.joined = true
+        console.log("Connected to "+this.room)
       }
     },
+    filesList(files) {
+      let root = {}
+      for (let file of files) {
+        filesTree(root, file.split('/'))
+      }
+      this.nodes = filesTree2List(root)
+    },
     updateText(data) {
-      if (data.id !== this.id && this.id && this.room) {
+      if (data.id !== this.id && this.joined) {
         this.text = data.text
       }
     }
@@ -104,16 +164,25 @@ export default {
         })
         this.ignoreChange = false
       }
+    },
+    onFileClick(ev) {
+      let path = getPath(this.nodes, ev.path)
+      if (path!==this.room) {
+        window.location = '/'+path
+      }
     }
   },
 }
 </script>
 
 <style>
+@import '../../node_modules/sl-vue-tree/dist/sl-vue-tree-minimal.css';
+@import '../../node_modules/sl-vue-tree/dist/sl-vue-tree-dark.css';
+@import 'https://use.fontawesome.com/releases/v5.0.8/css/all.css';
 
   #editor {
     top: 0;
-    left: 100px;
+    left: 200px;
     right: 0;
     bottom: 0;
     position: fixed !important;
@@ -123,12 +192,12 @@ export default {
     border: 1px solid #eee;
     height: 100%;
   }
-
-  sl-vue-tree {
+  #filesTree{
     position: fixed !important;
     top: 0;
     left: 0;
-    width: 100px;
+    width: 200px;
     bottom: 0;
+    background-color: #272822;
   }
 </style>
