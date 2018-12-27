@@ -3,7 +3,7 @@ import * as http from 'http'
 import * as Redis from 'ioredis'
 // var Redis = require('ioredis')
 
-const DEBUGMODE: boolean = false
+const DEBUGMODE: boolean = true
 
 const redisConfig = {
     host: 'pubsub',
@@ -47,30 +47,48 @@ wss.on('connection', (ws: any) => {
 
     ws.on('room', (room: string) => {
         if (room===null) {
+            if (DEBUGMODE) {
+                console.log(ws.id, "ROOM IS NULL")
+            }
             return
         }
         let root_room = '//'+room.split('/')[0]
         if (!root_room) {
+            if (DEBUGMODE) {
+                console.log(ws.id, "ROOT ROOM IS NULL")
+            }
             return
         }
         // Join rooms
         ws.join(root_room) // ROOM_POSITIONS = root
+        if (DEBUGMODE) {
+            console.log(ws.id, "JOIN ROOM:", root_room)
+        }
         ws.join(room)      // ROOM_POSITIONS = page
+        if (DEBUGMODE) {
+            console.log(ws.id, "JOIN ROOM:", room)
+        }
         // Update filesList and emit the event
         redisclient.pipeline()
             .sadd(root_room, room)
             .smembers(root_room)
             .exec().then((results: any) => {
                 let files = results[1][1]
+                if (DEBUGMODE) {
+                    console.log(ws.id, "EMIT filesList:", files)
+                }
                 wss.to(root_room).emit('filesList', files)
         })
         // Broadcast the text to the clients in the room
         redisclient.get(room).then((text: string|null) => {
             if (text === null) {
+                if (DEBUGMODE) {
+                    console.log(ws.id, "TEXT IS NULL")
+                }
                 text = ""
             }
             if (DEBUGMODE) {
-                console.log("EMIT:", text)
+                console.log(ws.id, "EMIT:", text)
             }
             ws.emit('get', text)
         }).catch((err: Error) => {
@@ -82,16 +100,22 @@ wss.on('connection', (ws: any) => {
         let room = getRoom(ws, 'page')
         redisclient.set(room, data.text, 'EX', 60*60*24*30)
         if (DEBUGMODE) {
-            console.log("UPDATE:", data)
+            console.log(ws.id, "UPDATE:", data)
         }
         wss.to(room).emit('updateText', data)
     })
     ws.on('disconnecting', () => {
         let room = getRoom(ws, 'page')
         let root_room = getRoom(ws, 'root')
+        if (DEBUGMODE) {
+            console.log(ws.id, "DISCONNECTING:", room, root_room)
+        }
         let clientNumber = 1
         if (wss.sockets.adapter.rooms[room]) {
             clientNumber = wss.sockets.adapter.rooms[room].length
+            if (DEBUGMODE) {
+                console.log(ws.id, "DISCONNECTING CLIENTS:", clientNumber)
+            }
         }
         // Remove room from filesList if there is no other client and no text
         if (clientNumber <= 1) {
@@ -102,6 +126,7 @@ wss.on('connection', (ws: any) => {
                         .smembers(root_room)
                         .exec().then((results: any) => {
                             let files = results[1][1]
+                            console.log(ws.id, "DISCONNECTING FILES LIST:", files)
                             wss.to(root_room).emit('filesList', files)
                         })
                 }
