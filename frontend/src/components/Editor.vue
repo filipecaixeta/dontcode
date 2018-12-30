@@ -157,9 +157,11 @@ export default {
       this.nodes = filesTree2List(root)
     },
     updateText(data) {
+      this.ignoreChange = true
       if (data.id !== this.id && this.joined) {
         this.text = data.text
       }
+      this.ignoreChange = false
     }
   },
   methods: {
