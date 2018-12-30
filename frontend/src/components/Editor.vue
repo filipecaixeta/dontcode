@@ -25,7 +25,7 @@
 
         </template>
     </sl-vue-tree>
-    <codemirror id="editor" v-model="text" :options="cmOptions" @input="editorOnChange"></codemirror>
+    <codemirror id="editor" v-model="text" :options="cmOptions" @inputRead="editorOnChange"></codemirror>
   </div>
 </template>
 
@@ -35,6 +35,7 @@ import { codemirror } from 'vue-codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/javascript/javascript.js'
 import 'codemirror/theme/monokai.css'
+import { setTimeout } from 'timers';
 
 function filesTree(root, files) {
   if (files.length==0) {
@@ -128,7 +129,6 @@ export default {
     }
   },
   mounted() {
-
   },
   sockets: {
     connect() {
