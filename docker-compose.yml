@@ -1,17 +1,24 @@
 version: "3"
 
 services:
-    frontend:
-        container_name: frontend
+    frontend-dev:
+        container_name: frontend-dev
         build: frontend
         ports:
-            - "80:80"
+            - "8081:8081"
         volumes:
             - "./frontend:/app/"
             # - "/app/node_modules"
         environment:
             - PORT=80
             - HOST=0.0.0.0
+    frontend-prod:
+        container_name: frontend-prod
+        build: 
+          context: ./
+          dockerfile: ./frontend.prod.Dockerfile
+        ports:
+            - "80:80"
     backend:
         container_name: backend
         build: backend

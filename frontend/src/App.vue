@@ -1,24 +1,31 @@
-<template>
-  <div id="app">
-    <router-view/>
-  </div>
-</template>
-
 <script>
+import Editor from './components/Editor.vue'
+import Index from './components/Index.vue'
+
 export default {
-  name: 'App'
+  name: 'app',
+  components: {
+    Editor
+  },
+  data () {
+    return {
+      currentRoute: window.location.pathname
+    }
+  },
+  computed: {
+    ViewComponent () {
+      if (this.currentRoute == '/') {
+        return Index
+      }
+      return Editor
+    }
+  },
+  render (h) {
+    return h(this.ViewComponent)
+  }
 }
 </script>
 
 <style>
-#app {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-body, html {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
+
 </style>

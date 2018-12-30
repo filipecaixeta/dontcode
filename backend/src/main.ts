@@ -1,7 +1,6 @@
 import * as express from 'express'
 import * as http from 'http'
 import * as Redis from 'ioredis'
-// var Redis = require('ioredis')
 
 const DEBUGMODE: boolean = true
 

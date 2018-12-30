@@ -1,23 +1,15 @@
 import Vue from 'vue'
-import App from './App'
-import router from './router'
+import App from './App.vue'
 import VueSocketIO from 'vue-socket.io'
-import { BACKEND_SOCKETIO } from '../config/prod.env'
-
-var VueCodeMirror = require('vue-codemirror-lite')
-require('codemirror/theme/monokai.css')
-Vue.use(VueCodeMirror)
-
-Vue.config.productionTip = false
 
 Vue.use(new VueSocketIO({
   debug: true,
-  connection: BACKEND_SOCKETIO
+  connection: process.env.VUE_APP_BACKEND_SOCKETIO
 }))
 
-/* eslint-disable no-new */
+
+Vue.config.productionTip = false
+
 new Vue({
-  el: '#app',
-  router,
-  render: h => h(App)
-})
+  render: function (h) { return h(App) },
+}).$mount('#app')

@@ -2,10 +2,10 @@ FROM library/node:10-alpine
 
 WORKDIR /app
 
-RUN yarn global add vue-cli
+RUN yarn global add @vue/cli
 
 COPY package.json /app
 
 RUN yarn
 
-CMD [ "npm", "run", "dev" ]
+CMD [ "yarn", "serve" ]

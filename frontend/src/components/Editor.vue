@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div>
     <sl-vue-tree v-model="nodes"
                 id="filesTree"
                 isDraggable="false"
@@ -31,6 +31,10 @@
 
 <script>
 import slVueTree from 'sl-vue-tree'
+import { codemirror } from 'vue-codemirror'
+import 'codemirror/lib/codemirror.css'
+import 'codemirror/mode/javascript/javascript.js'
+import 'codemirror/theme/monokai.css'
 
 function filesTree(root, files) {
   if (files.length==0) {
@@ -81,10 +85,14 @@ function getPath(nodes, pos) {
 }
 
 export default {
+  props: {
+    msg: String
+  },
   components: {
+    codemirror,
     slVueTree
   },
-  created() {
+    created() {
 
   },
   computed: {
@@ -98,7 +106,7 @@ export default {
       return this.roomName
     },
     roomName() {
-      return this.$router.history.current.fullPath.replace(/\/$/,'').slice(1)
+      return window.location.pathname.replace(/\/$/,'').slice(1)
     }
   },
   data () {
@@ -166,6 +174,7 @@ export default {
       }
     },
     onFileClick(ev) {
+      console.log("Click")
       let path = getPath(this.nodes, ev.path)
       if (path!==this.room) {
         window.location = '/'+path
@@ -191,6 +200,7 @@ export default {
   .CodeMirror {
     border: 1px solid #eee;
     height: 100%;
+    font-size: 1.5em;
   }
   #filesTree{
     position: fixed !important;
