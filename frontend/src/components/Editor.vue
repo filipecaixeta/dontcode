@@ -26,164 +26,177 @@
         </template>
     </sl-vue-tree>
     <codemirror id="editor" v-model="text" :options="cmOptions" @inputRead="editorOnChange"></codemirror>
+    <div class="bottom-bar"></div>
   </div>
 </template>
 
 <script>
-import slVueTree from 'sl-vue-tree'
-import { codemirror } from 'vue-codemirror'
-import 'codemirror/lib/codemirror.css'
-import 'codemirror/mode/javascript/javascript.js'
-import 'codemirror/theme/monokai.css'
-import { setTimeout } from 'timers';
+  import slVueTree from 'sl-vue-tree'
+  import { codemirror } from 'vue-codemirror'
+  import 'codemirror/lib/codemirror.css'
+  import 'codemirror/addon/search/search.js'
+  import 'codemirror/addon/search/jump-to-line.js'
+  import 'codemirror/addon/search/searchcursor.js'
+  import 'codemirror/addon/dialog/dialog.js'
 
-function filesTree(root, files) {
-  if (files.length==0) {
-    return
-  }
-  else {
-    let file = files.shift()
-    root[file] = root[file] || {}
-    filesTree(root[file], files)
-  }
-}
+  import 'codemirror/mode/javascript/javascript.js'
+  import 'codemirror/mode/markdown/markdown.js'
+  import 'codemirror/mode/vue/vue.js'
+  import 'codemirror/mode/dockerfile/dockerfile.js'
+  import 'codemirror/mode/python/python'
 
-function filesTree2List(tree) {
-  let files = Object.keys(tree)
-  let ret = []
-  for (let file of files) {
-    if (Object.keys(tree[file]).length===0) {
-      ret.push({title: file, isLeaf: true, isDraggable: false})
+  import 'codemirror/theme/monokai.css'
+  import 'codemirror/addon/dialog/dialog.css'
+
+  import { setTimeout } from 'timers';
+
+  function filesTree(root, files) {
+    if (files.length==0) {
+      return
     }
     else {
-      let children = []
-      for (let x of Object.keys(tree[file])) {
-        if (Object.keys(tree[file][x]).length===0) {
-          children.push({title: x, isLeaf: true, isDraggable: false})
-        }
-        else {
-          children.push({title: x, isLeaf: false, isDraggable: false, children: filesTree2List(tree[file][x])})
-        }
-      }
-      ret.push({title: file, isLeaf: false, isDraggable: false, children: children, data: {'teste': 'lol'}})
+      let file = files.shift()
+      root[file] = root[file] || {}
+      filesTree(root[file], files)
     }
   }
-  return ret
-}
 
-function getPath(nodes, pos) {
-  let path = ""
-  for (let p of pos) {
-    if (nodes.constructor === Array) {
-      nodes = nodes[p]
+  function filesTree2List(tree) {
+    let files = Object.keys(tree)
+    let ret = []
+    for (let file of files) {
+      if (Object.keys(tree[file]).length===0) {
+        ret.push({title: file, isLeaf: true, isDraggable: false})
+      }
+      else {
+        let children = []
+        for (let x of Object.keys(tree[file])) {
+          if (Object.keys(tree[file][x]).length===0) {
+            children.push({title: x, isLeaf: true, isDraggable: false})
+          }
+          else {
+            children.push({title: x, isLeaf: false, isDraggable: false, children: filesTree2List(tree[file][x])})
+          }
+        }
+        ret.push({title: file, isLeaf: false, isDraggable: false, children: children, data: {'teste': 'lol'}})
+      }
     }
-    else if (!nodes.isLeaf) {
-      nodes = nodes.children[p]
-    }
-    path += nodes.title+'/'
+    return ret
   }
-  return path.substring(0, path.length-1)
-}
 
-export default {
-  props: {
-    msg: String
-  },
-  components: {
-    codemirror,
-    slVueTree
-  },
-    created() {
+  function getPath(nodes, pos) {
+    let path = ""
+    for (let p of pos) {
+      if (nodes.constructor === Array) {
+        nodes = nodes[p]
+      }
+      else if (!nodes.isLeaf) {
+        nodes = nodes.children[p]
+      }
+      path += nodes.title+'/'
+    }
+    return path.substring(0, path.length-1)
+  }
 
-  },
-  computed: {
-    codemirror() {
-      return this.$refs.myCm.codemirror
+  export default {
+    props: {
+      msg: String
     },
-    room() {
-      if (!this.id || !this.joined) {
-        return null
-      }
-      return this.roomName
+    components: {
+      codemirror,
+      slVueTree
     },
-    roomName() {
-      return window.location.pathname.replace(/\/$/,'').slice(1)
-    }
-  },
-  data () {
-    return {
-      nodes: [],
-      editor: null,
-      joined: false,
-      id: null,
-      text: '',
-      cmOptions: {
-        tabSize: 4,
-        styleActiveLine: false,
-        lineNumbers: true,
-        styleSelectedText: false,
-        line: true,
-        showCursorWhenSelecting: true,
-        theme: "monokai"
-      }
-    }
-  },
-  mounted() {
-  },
-  sockets: {
-    connect() {
-      this.id = this.$socket.id
-      this.$socket.emit('room', this.roomName)
+      created() {
+
     },
-    get(text) {
-      this.text = text
-    },
-    disconnect() {
-      console.log("Disconnected from "+this.room)
-      this.id = null
-      this.joined = null
-    },
-    room(status) {
-      if (status === 'joined') {
-        this.joined = true
-        console.log("Connected to "+this.room)
+    computed: {
+      codemirror() {
+        return this.$refs.myCm.codemirror
+      },
+      room() {
+        if (!this.id || !this.joined) {
+          return null
+        }
+        return this.roomName
+      },
+      roomName() {
+        return window.location.pathname.replace(/\/$/,'').slice(1)
       }
     },
-    filesList(files) {
-      let root = {}
-      for (let file of files) {
-        filesTree(root, file.split('/'))
+    data () {
+      return {
+        nodes: [],
+        editor: null,
+        joined: false,
+        id: null,
+        text: '',
+        cmOptions: {
+          tabSize: 4,
+          styleActiveLine: false,
+          lineNumbers: true,
+          styleSelectedText: false,
+          line: true,
+          showCursorWhenSelecting: true,
+          theme: "monokai"
+        }
       }
-      this.nodes = filesTree2List(root)
     },
-    updateText(data) {
-      this.ignoreChange = true
-      if (data.id !== this.id && this.joined) {
-        this.text = data.text
-      }
-      this.ignoreChange = false
-    }
-  },
-  methods: {
-    editorOnChange(text) {
-      if (this.joined && !this.ignoreChange) {
+    mounted() {
+    },
+    sockets: {
+      connect() {
+        this.id = this.$socket.id
+        this.$socket.emit('room', this.roomName)
+      },
+      get(text) {
+        this.text = text
+      },
+      disconnect() {
+        console.log("Disconnected from "+this.room)
+        this.id = null
+        this.joined = null
+      },
+      room(status) {
+        if (status === 'joined') {
+          this.joined = true
+          console.log("Connected to "+this.room)
+        }
+      },
+      filesList(files) {
+        let root = {}
+        for (let file of files) {
+          filesTree(root, file.split('/'))
+        }
+        this.nodes = filesTree2List(root)
+      },
+      updateText(data) {
         this.ignoreChange = true
-        this.$socket.emit('updateText', {
-          'text': this.text,
-          'id': this.id
-        })
+        if (data.id !== this.id && this.joined) {
+          this.text = data.text
+        }
         this.ignoreChange = false
       }
     },
-    onFileClick(ev) {
-      console.log("Click")
-      let path = getPath(this.nodes, ev.path)
-      if (path!==this.room) {
-        window.location = '/'+path
+    methods: {
+      editorOnChange(text) {
+        if (this.joined && !this.ignoreChange) {
+          this.ignoreChange = true
+          this.$socket.emit('updateText', {
+            'text': this.text,
+            'id': this.id
+          })
+          this.ignoreChange = false
+        }
+      },
+      onFileClick(ev) {
+        console.log("Click")
+        let path = getPath(this.nodes, ev.path)
+        if (path!==this.room) {
+          window.location = '/'+path
+        }
       }
-    }
-  },
-}
+    },
+  }
 </script>
 
 <style>
@@ -195,9 +208,18 @@ export default {
     top: 0;
     left: 200px;
     right: 0;
+    bottom: 25px;
+    position: fixed !important;
+    overflow: hidden;
+  }
+  .bottom-bar {
+    left: 0;
+    right: 0;
+    height: 25px;
     bottom: 0;
     position: fixed !important;
     overflow: hidden;
+    background: #007acc;
   }
   .CodeMirror {
     border: 1px solid #eee;
@@ -209,7 +231,7 @@ export default {
     top: 0;
     left: 0;
     width: 200px;
-    bottom: 0;
+    bottom: 25px;
     background-color: #272822;
   }
 </style>
