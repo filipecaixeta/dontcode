@@ -3,7 +3,7 @@ import App from './App.vue'
 import VueSocketIO from 'vue-socket.io'
 
 Vue.use(new VueSocketIO({
-  debug: true,
+  debug: false,
   connection: process.env.VUE_APP_BACKEND_SOCKETIO
 }))
 

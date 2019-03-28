@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="grid-container">
     <sl-vue-tree v-model="nodes"
                 id="filesTree"
                 isDraggable="false"
@@ -25,8 +25,15 @@
 
         </template>
     </sl-vue-tree>
-    <codemirror id="editor" v-model="text" :options="cmOptions" @inputRead="editorOnChange"></codemirror>
-    <div class="bottom-bar"></div>
+    <codemirror ref="mycm" id="editor" v-model="text" :options="cmOptions" 
+      @changes="editorOnChanges"></codemirror>
+    <div class="statusbar">
+      <div class="element">
+        <select @change="onModeChange($event)">
+          <option v-for="m of modes" :selected="m==mode">{{m}}</option>
+        </select>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -39,11 +46,11 @@
   import 'codemirror/addon/search/searchcursor.js'
   import 'codemirror/addon/dialog/dialog.js'
 
-  import 'codemirror/mode/javascript/javascript.js'
-  import 'codemirror/mode/markdown/markdown.js'
-  import 'codemirror/mode/vue/vue.js'
-  import 'codemirror/mode/dockerfile/dockerfile.js'
-  import 'codemirror/mode/python/python'
+  // import 'codemirror/mode/javascript/javascript.js'
+  // import 'codemirror/mode/markdown/markdown.js'
+  // import 'codemirror/mode/vue/vue.js'
+  // import 'codemirror/mode/dockerfile/dockerfile.js'
+  // import 'codemirror/mode/python/python'
 
   import 'codemirror/theme/monokai.css'
   import 'codemirror/addon/dialog/dialog.css'
@@ -111,7 +118,7 @@
     },
     computed: {
       codemirror() {
-        return this.$refs.myCm.codemirror
+        return this.$refs.mycm.codemirror
       },
       room() {
         if (!this.id || !this.joined) {
@@ -130,6 +137,12 @@
         joined: false,
         id: null,
         text: '',
+        mode: "markdown",
+        modes: ["clojure", "cmake", "css", "django", "dockerfile", "go", "html", "javascript", "jsx", 
+          "julia", "lua", "markdown", "nginx", "octave", "pascal", "perl", "php", "powershell",
+          "pug", "python", "r", "ruby", "rust", "sass", "shell", "sparql", "sql", "stylus", "swift", 
+          "vb", "vbscript", "vue", "xml", "yaml"
+        ],
         cmOptions: {
           tabSize: 4,
           styleActiveLine: false,
@@ -142,6 +155,7 @@
       }
     },
     mounted() {
+      this.setMode(this.mode)
     },
     sockets: {
       connect() {
@@ -178,6 +192,23 @@
       }
     },
     methods: {
+      editorOnChanges(instance, changes) {
+        for (let change of changes) {
+          if (change.origin !== 'setValue') {
+            return this.editorOnChange(this.text)
+          }
+        }
+      },
+      setMode(mode) {
+        mode = mode.replace('html','htmlmixed')
+        import('codemirror/mode/'+mode+'/'+mode+'.js').then(()=>{
+          this.codemirror.setOption("mode", mode)
+        })
+      },
+      onModeChange(event) {
+        var mode = event.target.value.toLowerCase()
+        this.setMode(mode)
+      },
       editorOnChange(text) {
         if (this.joined && !this.ignoreChange) {
           this.ignoreChange = true
@@ -204,22 +235,59 @@
 @import '../../node_modules/sl-vue-tree/dist/sl-vue-tree-dark.css';
 @import 'https://use.fontawesome.com/releases/v5.0.8/css/all.css';
 
-  #editor {
-    top: 0;
-    left: 200px;
-    right: 0;
-    bottom: 25px;
+
+  .grid-container {
     position: fixed !important;
-    overflow: hidden;
-  }
-  .bottom-bar {
     left: 0;
     right: 0;
-    height: 25px;
     bottom: 0;
-    position: fixed !important;
+    top: 0;
+    overflow: hidden;
+    display: grid; 
+    grid-column-gap: 0;
+    grid-template-areas:
+      "filestree editor"
+      "statusbar statusbar";
+    grid-template-columns: 250px auto;
+    grid-template-rows: auto 25px;
+  }
+  #editor {
+    grid-area: editor;
+    overflow: hidden;
+  }
+  .statusbar {
+    grid-area: statusbar;
     overflow: hidden;
     background: #007acc;
+    padding: 0 20px;
+  }
+  .statusbar .element {
+    float: right;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    display: inline-block;
+    font-family: "Ubuntu", "Droid Sans", sans-serif;
+    font-size: 14px;
+    line-height: 22px;
+    margin-left: 5px;
+    padding-bottom: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 0px;
+    overflow:hidden;
+    outline: 0;
+  }
+  .statusbar .element select {
+    border: 0;
+    background: #007acc;
+    font-family:Arial, Helvetica, sans-serif; /* Fonte do Select */
+    font-size:18px; /* Tamanho da Fonte */
+    color:#fff; /* Cor da Fonte */
+    text-indent: 0.01px; /* Remove seta padrão do FireFox */
+    text-overflow: "";  /* Remove seta padrão do FireFox */     
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: 0;
   }
   .CodeMirror {
     border: 1px solid #eee;
@@ -227,11 +295,7 @@
     font-size: 1.5em;
   }
   #filesTree{
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 200px;
-    bottom: 25px;
+    grid-area: filestree;
     background-color: #272822;
   }
 </style>
