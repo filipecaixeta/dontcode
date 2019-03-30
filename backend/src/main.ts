@@ -26,7 +26,42 @@ const redisAdapter = require('socket.io-redis')
 wss.set('origins', '*:*')
 wss.adapter(redisAdapter({  pubClient: new Redis(redisConfig),
                             subClient: new Redis(redisConfig) }))
+
+// ROOM_POSITIONS is defined by the order of ws.join is called
+// self_con is used to talk to 1 client
+// root is used to handle changes on the file tree
+// page is used to handle changes of a page
 const ROOM_POSITIONS: {[id: string]: number} = {'self_con': 0, 'root': 1, 'page': 2}
+
+function convertObjectToArray (obj: any) {
+    var result = []
+    var keys = Object.keys(obj)
+
+    for (var i = 0, l = keys.length; i < l; i++) {
+        result.push(keys[i], obj[keys[i]])
+    }
+    return result
+}
+
+// Convert hmset and hgetall from list to obect
+Redis.Command.setArgumentTransformer('hmset', function (args: any) {
+    if (args.length === 2) {
+        if ( typeof args[1] === 'object' && args[1] !== null) {
+        return [args[0]].concat(convertObjectToArray(args[1]));
+        }
+    }
+    return args
+})
+Redis.Command.setReplyTransformer('hgetall', function (result: any) {
+    if (Array.isArray(result)) {
+        var obj: any = {}
+        for (var i = 0; i < result.length; i += 2) {
+        obj[result[i]] = result[i + 1]
+        }
+        return obj
+    }
+    return result
+})
 
 function getRoom(ws: any, name: string) {
     let rooms = Object.keys(wss.sockets.adapter.sids[ws.id])
@@ -42,6 +77,11 @@ function emitFilesList(ws: any, root_room: string|null = null) {
     })
 }
 
+interface PageData {
+    text: string
+    mode: string
+}
+
 wss.on('connection', (ws: any) => {
 
     ws.on('room', (room: string) => {
@@ -51,6 +91,10 @@ wss.on('connection', (ws: any) => {
             }
             return
         }
+        // Make sure the room name doesn't start or end with slashes
+        room = room.replace(/(^[\/\s]+)|([\/\s]+$)/g,'')
+        
+        // Root_room always start with //
         let root_room = '//'+room.split('/')[0]
         if (!root_room) {
             if (DEBUGMODE) {
@@ -79,29 +123,34 @@ wss.on('connection', (ws: any) => {
                 wss.to(root_room).emit('filesList', files)
         })
         // Broadcast the text to the clients in the room
-        redisclient.get(room).then((text: string|null) => {
-            if (text === null) {
+        redisclient.hgetall(room).then((pageData: PageData) => {
+            if (pageData === null) {
                 if (DEBUGMODE) {
                     console.log(ws.id, "TEXT IS NULL")
                 }
-                text = ""
+                pageData = {
+                    mode: 'auto',
+                    text: ''
+                }
             }
             if (DEBUGMODE) {
-                console.log(ws.id, "EMIT:", text)
+                console.log(ws.id, "EMIT:", pageData)
             }
-            ws.emit('get', text)
+            ws.emit('get', pageData)
         }).catch((err: Error) => {
             console.error(err.message)
         })
         ws.emit('room', 'joined')
     })
-    ws.on('updateText', (data: any) => {
+    ws.on('updatePageData', (data: any) => {
         let room = getRoom(ws, 'page')
-        redisclient.set(room, data.text, 'EX', 60*60*24*30)
+        
+        redisclient.hmset(room, data.pageData)
+
         if (DEBUGMODE) {
             console.log(ws.id, "UPDATE:", data)
         }
-        wss.to(room).emit('updateText', data)
+        wss.to(room).emit('updatePageData', data)
     })
     ws.on('disconnecting', () => {
         let room = getRoom(ws, 'page')

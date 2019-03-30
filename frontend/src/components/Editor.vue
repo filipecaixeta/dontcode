@@ -29,9 +29,13 @@
       @changes="editorOnChanges"></codemirror>
     <div class="statusbar">
       <div class="element">
-        <select @change="onModeChange($event)">
-          <option v-for="m of modes" :selected="m==mode">{{m}}</option>
-        </select>
+      <select  @change="onModeChange($event)" v-model="mode">
+        <option v-for="m in modes" 
+        selected="m == mode"
+        :value="m">
+          {{m}}
+        </option>
+      </select>
       </div>
     </div>
   </div>
@@ -45,13 +49,6 @@
   import 'codemirror/addon/search/jump-to-line.js'
   import 'codemirror/addon/search/searchcursor.js'
   import 'codemirror/addon/dialog/dialog.js'
-
-  // import 'codemirror/mode/javascript/javascript.js'
-  // import 'codemirror/mode/markdown/markdown.js'
-  // import 'codemirror/mode/vue/vue.js'
-  // import 'codemirror/mode/dockerfile/dockerfile.js'
-  // import 'codemirror/mode/python/python'
-
   import 'codemirror/theme/monokai.css'
   import 'codemirror/addon/dialog/dialog.css'
 
@@ -137,7 +134,7 @@
         joined: false,
         id: null,
         text: '',
-        mode: "markdown",
+        mode: "",
         modes: ["clojure", "cmake", "css", "django", "dockerfile", "go", "html", "javascript", "jsx", 
           "julia", "lua", "markdown", "nginx", "octave", "pascal", "perl", "php", "powershell",
           "pug", "python", "r", "ruby", "rust", "sass", "shell", "sparql", "sql", "stylus", "swift", 
@@ -162,8 +159,16 @@
         this.id = this.$socket.id
         this.$socket.emit('room', this.roomName)
       },
-      get(text) {
-        this.text = text
+      get(pageData) {
+        if (pageData.text!==undefined) {
+          this.text = pageData.text
+        }
+        if (pageData.mode!==undefined) {
+          if (this.mode !== pageData.mode) {
+            this.mode = pageData.mode
+            this.setMode(this.mode)
+          }
+        }
       },
       disconnect() {
         console.log("Disconnected from "+this.room)
@@ -183,10 +188,19 @@
         }
         this.nodes = filesTree2List(root)
       },
-      updateText(data) {
+      updatePageData(data) {
         this.ignoreChange = true
         if (data.id !== this.id && this.joined) {
-          this.text = data.text
+          let pageData = data.pageData
+          if (pageData.text!==undefined) {
+            this.text = pageData.text
+          }
+          if (pageData.mode!==undefined) {
+            if (this.mode !== pageData.mode) {
+              this.mode = pageData.mode
+              this.setMode(this.mode)
+            }
+          }
         }
         this.ignoreChange = false
       }
@@ -203,6 +217,14 @@
         mode = mode.replace('html','htmlmixed')
         import('codemirror/mode/'+mode+'/'+mode+'.js').then(()=>{
           this.codemirror.setOption("mode", mode)
+          if (this.mode!="") {
+            this.$socket.emit('updatePageData', {
+              'pageData': {
+                mode: this.mode
+              },
+              'id': this.id
+            })
+          }
         })
       },
       onModeChange(event) {
@@ -212,8 +234,10 @@
       editorOnChange(text) {
         if (this.joined && !this.ignoreChange) {
           this.ignoreChange = true
-          this.$socket.emit('updateText', {
-            'text': this.text,
+          this.$socket.emit('updatePageData', {
+            'pageData': {
+              text: this.text,
+            },
             'id': this.id
           })
           this.ignoreChange = false
@@ -280,11 +304,11 @@
   .statusbar .element select {
     border: 0;
     background: #007acc;
-    font-family:Arial, Helvetica, sans-serif; /* Fonte do Select */
-    font-size:18px; /* Tamanho da Fonte */
-    color:#fff; /* Cor da Fonte */
-    text-indent: 0.01px; /* Remove seta padrão do FireFox */
-    text-overflow: "";  /* Remove seta padrão do FireFox */     
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:18px;
+    color:#fff;
+    text-indent: 0.01px;
+    text-overflow: "";
     -webkit-appearance: none;
     -moz-appearance: none;
     outline: 0;
