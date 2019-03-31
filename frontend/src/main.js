@@ -4,7 +4,7 @@ import VueSocketIO from 'vue-socket.io'
 import io from 'socket.io-client'
 
 Vue.use(new VueSocketIO({
-  debug: false,
+  debug: true,
   connection: io.connect(process.env.VUE_APP_BACKEND_SOCKETIO, {
     reconnection: true,
     reconnectionDelay: 500,

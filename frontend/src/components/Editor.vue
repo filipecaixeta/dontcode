@@ -118,7 +118,7 @@
         return this.$refs.mycm.codemirror
       },
       room() {
-        if (!this.id || !this.joined) {
+        if (!this._id || !this.joined) {
           return null
         }
         return this.roomName
@@ -132,7 +132,7 @@
         nodes: [],
         editor: null,
         joined: false,
-        id: null,
+        _id: null,
         text: '',
         mode: "",
         modes: ["clojure", "cmake", "css", "django", "dockerfile", "go", "html", "javascript", "jsx", 
@@ -147,7 +147,8 @@
           styleSelectedText: false,
           line: true,
           showCursorWhenSelecting: true,
-          theme: "monokai"
+          theme: "monokai",
+          lineWrapping: true
         }
       }
     },
@@ -156,23 +157,12 @@
     },
     sockets: {
       connect() {
-        this.id = this.$socket.id
+        this._id = this.$socket.id
         this.$socket.emit('room', this.roomName)
-      },
-      get(pageData) {
-        if (pageData.text!==undefined) {
-          this.text = pageData.text
-        }
-        if (pageData.mode!==undefined) {
-          if (this.mode !== pageData.mode) {
-            this.mode = pageData.mode
-            this.setMode(this.mode)
-          }
-        }
       },
       disconnect() {
         console.log("Disconnected from "+this.room)
-        this.id = null
+        this._id = null
         this.joined = null
       },
       room(status) {
@@ -188,16 +178,15 @@
         }
         this.nodes = filesTree2List(root)
       },
-      updatePageData(data) {
+      updateRoomData(roomData) {
         this.ignoreChange = true
-        if (data.id !== this.id && this.joined) {
-          let pageData = data.pageData
-          if (pageData.text!==undefined) {
-            this.text = pageData.text
+        if (roomData._id !== this._id && this.joined) {
+          if (roomData.text!==undefined) {
+            this.text = roomData.text
           }
-          if (pageData.mode!==undefined) {
-            if (this.mode !== pageData.mode) {
-              this.mode = pageData.mode
+          if (roomData.mode!==undefined) {
+            if (this.mode !== roomData.mode) {
+              this.mode = roomData.mode
               this.setMode(this.mode)
             }
           }
@@ -218,11 +207,9 @@
         import('codemirror/mode/'+mode+'/'+mode+'.js').then(()=>{
           this.codemirror.setOption("mode", mode)
           if (this.mode!="") {
-            this.$socket.emit('updatePageData', {
-              'pageData': {
-                mode: this.mode
-              },
-              'id': this.id
+            this.$socket.emit('updateRoomData', {
+              mode: this.mode,
+              '_id': this._id
             })
           }
         })
@@ -234,11 +221,9 @@
       editorOnChange(text) {
         if (this.joined && !this.ignoreChange) {
           this.ignoreChange = true
-          this.$socket.emit('updatePageData', {
-            'pageData': {
-              text: this.text,
-            },
-            'id': this.id
+          this.$socket.emit('updateRoomData', {
+            text: this.text,
+            '_id': this._id
           })
           this.ignoreChange = false
         }
@@ -300,6 +285,11 @@
     padding-top: 0px;
     overflow:hidden;
     outline: 0;
+  }
+  .statusbar .element select option{
+    background: #2c2c27;
+    color: #c0c0c0;
+    cursor: pointer;
   }
   .statusbar .element select {
     border: 0;
