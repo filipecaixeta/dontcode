@@ -6,4 +6,4 @@ COPY package.json /app
 
 RUN yarn
 
-CMD [ "npm", "run", "dev" ]
+CMD [ "yarn", "dev" ]
