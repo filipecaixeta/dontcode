@@ -12,24 +12,21 @@ services:
         environment:
             - PORT=80
             - HOST=0.0.0.0
-    frontend-prod:
-        # container_name: frontend-prod
-        build: 
-          context: ./
-          dockerfile: ./frontend.prod.Dockerfile
-        ports:
-            - "80:80"
     backend:
         # container_name: backend
-        build: backend
+        build: .
         ports:
-            - "8080:8080"
+            - "80:80"
         volumes:
-            - "./backend:/app/"
-            - "/app/node_modules"
+            - "./backend:/backend/"
+            - "/backend/node_modules"
+            # - "/backend/frontend-dist"
+        #     - "./frontend:/frontend"
+        #     - "/frontend/node_modules"
         environment:
-            - PORT=8080
+            - PORT=80
             - HOST=0.0.0.0
+            - VUE_APP_BACKEND_SOCKETIO=80
     pubsub:
         image: library/redis:5-alpine3.8
         command: redis-server /usr/local/etc/redis/redis.conf
