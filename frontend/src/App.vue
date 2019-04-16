@@ -27,5 +27,10 @@ export default {
 </script>
 
 <style>
-
+body {
+  background-color: #272822;
+	display: flex;
+  align-items: center;
+  justify-content: center
+}
 </style>
