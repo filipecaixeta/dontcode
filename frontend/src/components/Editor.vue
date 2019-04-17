@@ -1,44 +1,37 @@
-<template>
-  <div class="grid-container">
-    <sl-vue-tree v-model="nodes"
-                id="filesTree"
-                isDraggable="false"
-                @nodeclick="onFileClick">
-
-      <template slot="title" slot-scope="{ node }">
-          <span class="item-icon">
-            <i class="fa fa-file" v-if="node.isLeaf"></i>
-            <i class="fa fa-folder" v-if="!node.isLeaf"></i>
-          </span>
-
-          {{ node.title }}
-        </template>
-
-        <template slot="toggle" slot-scope="{ node }">
-          <span v-if="!node.isLeaf">
-            <i v-if="node.isExpanded" class="fa fa-chevron-down"></i>
-            <i v-if="!node.isExpanded" class="fa fa-chevron-right"></i>
-          </span>
-        </template>
-
-        <template slot="draginfo">
-
-        </template>
-    </sl-vue-tree>
-    <codemirror ref="mycm" id="editor" v-model="text" :options="cmOptions" 
-      @changes="editorOnChanges"></codemirror>
-    <div class="statusbar">
-      <div class="element">
-      <select  @change="onModeChange($event)" v-model="mode">
-        <option v-for="m in modes" 
-        selected="m == mode"
-        :value="m">
-          {{m}}
-        </option>
-      </select>
-      </div>
-    </div>
-  </div>
+<template lang="pug">
+  div.grid-container
+    sl-vue-tree(
+      v-model="nodes"
+      id="filesTree"
+      isDraggable="false"
+      @nodeclick="onFileClick"
+    )
+      template(slot="title" slot-scope="{ node }")
+        span.item-icon
+          i(v-if="node.isLeaf").fa.fa-file
+          i(v-else).fa.fa-folder
+          | {{ node.title }}
+      template(slot="toggle" slot-scope="{ node }")
+        span(v-if="!node.isLeaf")
+          i(v-if="node.isExpanded").fa.fa-chevron-down
+          i(v-else).fa.fa-chevron-right
+      template(slot="draginfo")
+    codemirror(
+      ref="mycm"
+      id="editor"
+      v-model="text"
+      :options="cmOptions"
+      @changes="editorOnChanges"
+    )
+    div.statusbar
+      div.element
+        select(@change="onModeChange($event)" v-model="mode")
+          option(
+            v-for="m in modes" 
+            selected="m == mode"
+            :value="m"
+          )
+            | {{m}}
 </template>
 
 <script>

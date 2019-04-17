@@ -7,6 +7,8 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "pug": "^2.0.3",
+    "pug-plain-loader": "^1.0.0",
     "sl-vue-tree": "^1.8.3",
     "vue": "^2.5.17",
     "vue-codemirror": "^4.0.6",
