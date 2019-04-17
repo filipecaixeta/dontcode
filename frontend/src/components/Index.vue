@@ -31,9 +31,6 @@ export default {
 		randDelay (min, max) {
 			return Math.floor(Math.random() * (max-min+1)+min);
 		},
-		async startTyping () {
-			this.typeWrite(this.phrases)
-		},
 		typeWrite () {
 			let phrase = this.phrases[this.phraseCount]
 			let splitted = phrase.split('')
@@ -71,7 +68,6 @@ export default {
 					this.typeWrite()
 				}, 1000)
 			}
-
 		}
 	},
 	computed: {
@@ -80,7 +76,7 @@ export default {
 		}
 	},
 	mounted(){
-    this.startTyping()
+    this.typeWrite()
   }
 }
 </script>
