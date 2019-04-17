@@ -24,49 +24,55 @@ export default {
 	data () {
 		return {
 			search: '',
-			phrase: 'writeWhateverYouWant',
+			phrases: ['writeWhateverYouWant', 'letsWin', 'todayHave'],
 			placeholder: '',
-			phCount: 0
+			phraseCount: 0,
+			placeholderCount: 0
 		}
 	},
 	methods: {
 		randDelay (min, max) {
 			return Math.floor(Math.random() * (max-min+1)+min);
 		},
-		startTyping () {
-			let startText = this.phrase
-			this.typeWrite(startText)
+		async startTyping () {
+			this.typeWrite(this.phrases)
 		},
-		typeWrite (string) {
-			let splitted = string.split('')
+		typeWrite () {
+			let phrase = this.phrases[this.phraseCount]
+			let splitted = phrase.split('')
 			let current = this.placeholder
-			let original = string
-			this.placeholder = current + splitted[this.phCount]
-			if (this.phCount < splitted.length - 1) {
+			let original = phrase
+			this.placeholder = current + splitted[this.placeholderCount]
+			if (this.placeholderCount < splitted.length - 1) {
 				setTimeout (() => {
-						this.phCount++
-						this.typeWrite(original)
+						this.placeholderCount++
+						this.typeWrite()
 				}, this.randDelay(100, 300))
 			} else {
 				setTimeout (() => {
-					this.eraseWrite(original)
-				}, 1000)
+					this.eraseWrite()
+				}, 2000)
 			}
 		},
-		eraseWrite (string) {
+		eraseWrite () {
+			let phrase = this.phrases[this.phraseCount]
 			let current = this.placeholder
-			let original = string
+			let original = phrase
 			this.placeholder = current.slice(0, -1)
-			if (this.phCount > 0) {
+			if (this.placeholderCount > 0) {
 				setTimeout (() => {
-						this.phCount--
-						this.eraseWrite(original)
+						this.placeholderCount--
+						this.eraseWrite()
 					
 				}, this.randDelay(50, 100))
 			} else {
 				setTimeout (() => {
-					this.typeWrite(original)
-				}, 2000)
+					this.phraseCount++
+					if (this.phraseCount > this.phrases.length - 1) {
+						this.phraseCount = 0
+					}
+					this.typeWrite()
+				}, 1000)
 			}
 
 		}
