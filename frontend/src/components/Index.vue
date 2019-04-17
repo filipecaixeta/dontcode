@@ -1,22 +1,19 @@
-<template>
-  <div class="home">
-		<h1>DONTCODE</h1>
-    <div id="pathToGo">
-			<form onsubmit="return go()" class="urlComplete" :action="urlAction">
-				<label class="urlLabel">dontcode.ml/</label>
-				<input type="text"
-							 class="urlInput"
-							 id="search"
-							 :placeholder="placeholder"
-							 v-model='search'
-							 autocapitalize="off"
-							 autocorrect="off"/>
-				<button type="submit" class="urlButton">
-					<i class="fa fa-search"></i>
-				</button>
-			</form>
-		</div>
-  </div>
+<template lang="pug">
+	div.home
+		h1 DONTCODE
+		div#pathToGo
+			form(onsubmit="return go()" :action="urlAction").urlComplete
+				label.urlLabel dontcode.ml/
+				input(
+					type="text"
+					id="search"
+					:placeholder="placeholder"
+					v-model='search'
+					autocapitalize="off"
+					autocorrect="off"
+				).urlInput
+				button(type="submit").urlButton
+					i.fa.fa-search
 </template>
 
 <script>
