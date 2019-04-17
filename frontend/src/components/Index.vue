@@ -42,27 +42,32 @@ export default {
 			let current = this.placeholder
 			let original = string
 			this.placeholder = current + splitted[this.phCount]
-			setTimeout (() => {
-				if (this.phCount < splitted.length - 1) {
-					this.phCount++
-					this.typeWrite(original)
-				} else {
+			if (this.phCount < splitted.length - 1) {
+				setTimeout (() => {
+						this.phCount++
+						this.typeWrite(original)
+				}, this.randDelay(100, 300))
+			} else {
+				setTimeout (() => {
 					this.eraseWrite(original)
-				}
-			}, this.randDelay(100, 300))
+				}, 1000)
+			}
 		},
 		eraseWrite (string) {
 			let current = this.placeholder
 			let original = string
 			this.placeholder = current.slice(0, -1)
-			setTimeout (() => {
-				if (this.phCount > 0) {
-					this.phCount--
-					this.eraseWrite(original)
-				} else {
+			if (this.phCount > 0) {
+				setTimeout (() => {
+						this.phCount--
+						this.eraseWrite(original)
+					
+				}, this.randDelay(50, 100))
+			} else {
+				setTimeout (() => {
 					this.typeWrite(original)
-				}
-			}, this.randDelay(50, 100))
+				}, 2000)
+			}
 
 		}
 	},
