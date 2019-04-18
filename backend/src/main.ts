@@ -81,7 +81,7 @@ async function api_middleware(req: any, res: any, next: any) {
             roomData.text = req.body.text
         if (req.body.mode!==undefined)
             roomData.mode = req.body.mode
-        redisclient.hmset(room, roomData)
+        redisclient.hmset(room, roomData).catch(err => console.error(err))
         broadcastRoomDataToClient(wss, room, roomData)
         res.send({'status': 'updated'})
         if (roomData.text)
@@ -215,6 +215,9 @@ function broadcastRoomDataToClient(wss: any, room: string, roomData: RoomData) {
 }
 // Removes the file from the tree if there is no client and text
 function removeFileFromTree(room: string) {
+    if (room === undefined) {
+        return
+    }
     let root_room = getRootRoomName(room)
     // Count clients in the room
     let clientNumber = 1
@@ -267,7 +270,7 @@ wss.on('connection', (ws: any) => {
     })
     ws.on('updateRoomData', (roomData: RoomData) => {
         let room = getRoom(wss, ws, 'page')
-        redisclient.hmset(room, roomData)
+        redisclient.hmset(room, roomData).catch(err => console.error(err))
         broadcastRoomDataToClient(wss, room, roomData)
     })
     ws.on('disconnecting', () => {
