@@ -10,7 +10,7 @@ const history = require('connect-history-api-fallback')
 const compression = require('compression')
 const helmet = require('helmet');
 
-const staticFileMiddleware = express.static(path.join('/','app','dist'))
+const staticFileMiddleware = express.static(path.join('/','app','html'))
 
 const DEBUGMODE: boolean = false
 
@@ -29,7 +29,6 @@ const redisConfig = {
 }
 const redisclient = new Redis(redisConfig)
 
-// wss.set('origins', '*:*')
 wss.adapter(redisAdapter({  pubClient: new Redis(redisConfig),
                             subClient: new Redis(redisConfig) }))
 
@@ -81,6 +80,10 @@ async function api_middleware(req: any, res: any, next: any) {
             roomData.text = req.body.text
         if (req.body.mode!==undefined)
             roomData.mode = req.body.mode
+        if (Object.keys(roomData).length==0) {
+            res.status(400).json({ error: "wrong format" })
+            return
+        }
         redisclient.hmset(room, roomData).catch(err => console.error(err))
         broadcastRoomDataToClient(wss, room, roomData)
         res.send({'status': 'updated'})
@@ -96,27 +99,9 @@ async function api_middleware(req: any, res: any, next: any) {
 
 app.use(api_middleware)
 
-
 app.use(staticFileMiddleware)
 app.use(history({disableDotRule: true}))
 app.use(staticFileMiddleware)
-
-// app.use((req: any, res: any, next: any)=>{
-//     if (req.originalUrl.startsWith("socket"))
-//         next()
-//     staticFileMiddleware(req, res, next)
-// })
-// app.use((req: any, res: any, next: any)=>{
-//     if (req.originalUrl.startsWith("socket"))
-//         next()
-//     history()(req, res, next)
-// })
-// app.use((req: any, res: any, next: any)=>{
-//     if (req.originalUrl.startsWith("socket"))
-//         next()
-//     staticFileMiddleware(req, res, next)
-// })
-
 
 // ROOM_POSITIONS is defined by the order of ws.join is called
 // self_con is used to talk to 1 client
@@ -283,7 +268,6 @@ wss.on('connection', (ws: any) => {
     })
 })
 
-
 server.listen(process.env.PORT, () => {
-    console.log(`Server started on port ${process.env.PORT} :)`);
+    console.log(`Server started on port ${process.env.PORT}`);
 })

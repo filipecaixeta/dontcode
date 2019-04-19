@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+    server:
+        container_name: server
+        build: 
+            context: .
+            dockerfile: Dockerfile.prod
+        ports:
+            - "80:80"
+        environment:
+            - PORT=80
+            - HOST=0.0.0.0
+            - VUE_APP_BACKEND_SOCKETIO=80
+    pubsub:
+        image: library/redis:5-alpine3.8
+        command: redis-server /usr/local/etc/redis/redis.conf
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+            - ./redis/data:/data

@@ -1,0 +1,35 @@
+FROM library/node:10-alpine as builder
+
+COPY frontend /frontend
+
+WORKDIR /frontend
+
+RUN yarn global add @vue/cli@3.6.3 typescript@3.4.4
+
+RUN yarn
+
+RUN yarn build
+
+COPY backend /backend
+
+WORKDIR /backend
+
+RUN yarn install
+
+RUN yarn build 
+
+RUN yarn install --production=true
+
+FROM library/node:10-alpine
+
+ENV NODE_ENV=production
+
+COPY --from=builder /backend /app
+
+COPY --from=builder /frontend/dist /app/html
+
+COPY test.sh /app/test.sh
+
+WORKDIR /app
+
+CMD [ "node", "dist/main.js" ]

@@ -1,0 +1,52 @@
+image: docker:git
+services:
+- docker:dind
+
+stages:
+- build
+- test
+- release
+- deploy
+
+variables:
+  CONTAINER_RELEASE_IMAGE: registry.gitlab.com/filipecaixeta/dontcode
+
+before_script:
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+
+build:
+  stage: build
+  script:
+    - docker build -t $CONTAINER_RELEASE_IMAGE:test -f Dockerfile.prod .
+    - docker push $CONTAINER_RELEASE_IMAGE:test
+
+test:
+  stage: test
+  script:
+    - docker run $CONTAINER_RELEASE_IMAGE:test sh ./test.sh
+
+release-image:
+  stage: release
+  script:
+    - docker pull $CONTAINER_RELEASE_IMAGE:test
+    - docker tag $CONTAINER_RELEASE_IMAGE:test $CONTAINER_RELEASE_IMAGE:latest
+    - docker push $CONTAINER_RELEASE_IMAGE:latest
+  only:
+    - master
+
+deploy:
+  stage: deploy
+  image: gitlab/dind:latest
+  only:
+    - master
+  services:
+    - docker:dind
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "$DEPLOY_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - eval "$(ssh-agent -s)"
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts
+  script:
+    - ssh filipecaixeta@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com; cd /home/filipecaixeta/dontcode; docker pull $CONTAINER_RELEASE_IMAGE:latest; docker-compose -f docker-compose.yml up -d"
