@@ -314,28 +314,15 @@
     grid-area: filestree;
     background-color: #272822;
   }
-  @media only screen and (max-width: 768px){
-    .hidemenu.grid-container {
-      grid-template-areas:
-          "editor"
-          "statusbar" !important;
-      grid-template-columns: 100% !important;
-      grid-template-rows: calc(100% - 25px) 25px !important; 
-    }
-    .hidemenu#filesTree {
-      display: none;
-    }
-  }
   #menuToggle
   {
     cursor: pointer;
-    display: block;    
+    display: none;    
     z-index: 1;
     -webkit-user-select: none;
     user-select: none;
     height: 20px;
   }
-
   #menuToggle input
   {
     display: block;
@@ -360,5 +347,19 @@
     z-index: 1;
     -webkit-transform-origin: 4px 0px;
   }
-
+  @media only screen and (max-width: 768px){
+    .hidemenu.grid-container {
+      grid-template-areas:
+          "editor"
+          "statusbar" !important;
+      grid-template-columns: 100% !important;
+      grid-template-rows: calc(100% - 25px) 25px !important; 
+    }
+    .hidemenu#filesTree {
+      display: none;
+    }
+    #menuToggle {
+      display: block;
+    }
+  }
 </style>
