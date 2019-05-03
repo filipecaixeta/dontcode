@@ -1,5 +1,5 @@
 <template lang="pug">
-  div.grid-container
+  div.grid-container(:class="{hidemenu: menuToggle}")
     sl-vue-tree(
       v-model="nodes"
       id="filesTree"
@@ -24,6 +24,11 @@
       @changes="editorOnChanges"
     )
     div.statusbar
+      div#menuToggle
+        input(type="checkbox" v-model="menuToggle")
+        span
+        span
+        span
       div.element
         select(@change="onModeChange($event)" v-model="mode")
           option(
@@ -103,7 +108,7 @@
       codemirror,
       slVueTree
     },
-      created() {
+    created() {
 
     },
     computed: {
@@ -122,6 +127,7 @@
     },
     data () {
       return {
+        menuToggle: true,
         nodes: [],
         editor: null,
         joined: false,
@@ -276,7 +282,7 @@
     padding-left: 5px;
     padding-right: 5px;
     padding-top: 0px;
-    overflow:hidden;
+    overflow: hidden;
     outline: 0;
   }
   .statusbar .element select option{
@@ -296,6 +302,9 @@
     -moz-appearance: none;
     outline: 0;
   }
+  .statusbar div#menuToggle {
+    float: left;
+  }
   .CodeMirror {
     border: 1px solid #eee;
     height: 100%;
@@ -305,4 +314,51 @@
     grid-area: filestree;
     background-color: #272822;
   }
+  @media only screen and (max-width: 768px){
+    .hidemenu.grid-container {
+      grid-template-areas:
+          "editor"
+          "statusbar" !important;
+      grid-template-columns: 100% !important;
+      grid-template-rows: calc(100% - 25px) 25px !important; 
+    }
+    .hidemenu#filesTree {
+      display: none;
+    }
+  }
+  #menuToggle
+  {
+    cursor: pointer;
+    display: block;    
+    z-index: 1;
+    -webkit-user-select: none;
+    user-select: none;
+    height: 20px;
+  }
+
+  #menuToggle input
+  {
+    display: block;
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    cursor: pointer;
+    margin: 0;
+    opacity: 0;
+    z-index: 2;
+    -webkit-touch-callout: none;
+  }
+  #menuToggle span
+  {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 4px 0;
+    position: relative;
+    background: #cdcdcd;
+    border-radius: 3px;
+    z-index: 1;
+    -webkit-transform-origin: 4px 0px;
+  }
+
 </style>

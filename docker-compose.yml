@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+    frontend:
+        container_name: frontend
+        build:
+          context: ./frontend
+        ports:
+            - "8081:80"
+        volumes:
+            - "./frontend:/frontend/"
+            - "/frontend/node_modules"
+        environment:
+            - PORT=80
+            - HOST=0.0.0.0
+            - VUE_APP_BACKEND_SOCKETIO=80
+    backend:
+        container_name: backend
+        build:
+            context: ./backend
+        ports:
+            - "80:80"
+        volumes:
+            - "./backend:/backend/"
+            - "/backend/node_modules"
+        environment:
+            - PORT=80
+            - HOST=0.0.0.0
+    pubsub:
+        image: library/redis:5-alpine3.8
+        command: redis-server /usr/local/etc/redis/redis.conf
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+            - ./redis/data:/data

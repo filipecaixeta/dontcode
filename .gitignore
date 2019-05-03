@@ -1,4 +1,5 @@
 node_modules/
 redis/data/
+frontend/dist/
 *.lock
 package-lock.json
