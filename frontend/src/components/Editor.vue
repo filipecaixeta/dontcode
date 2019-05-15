@@ -307,7 +307,7 @@
   }
   .CodeMirror {
     border: 1px solid #eee;
-    height: 100%;
+    height: calc(100vh - 25px);
     font-size: 1.5em;
   }
   #filesTree{
