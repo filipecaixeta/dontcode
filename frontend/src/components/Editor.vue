@@ -313,6 +313,7 @@
   #filesTree{
     grid-area: filestree;
     background-color: #272822;
+    overflow-y: auto;
   }
   #menuToggle
   {
