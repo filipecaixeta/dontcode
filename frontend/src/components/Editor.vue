@@ -10,7 +10,7 @@
         span.item-icon
           i(v-if="node.isLeaf").fa.fa-file
           i(v-else).fa.fa-folder
-          | {{ node.title }}
+          | &nbsp;{{ node.title }}
       template(slot="toggle" slot-scope="{ node }")
         span(v-if="!node.isLeaf")
           i(v-if="node.isExpanded").fa.fa-chevron-down
@@ -50,6 +50,8 @@
   import 'codemirror/theme/monokai.css'
   import 'codemirror/addon/dialog/dialog.css'
 
+  import { detect, languages } from 'program-language-detector'
+  import _debounce from 'lodash-es/debounce'
   import { setTimeout } from 'timers';
 
   function filesTree(root, files) {
@@ -133,11 +135,12 @@
         joined: false,
         _id: null,
         text: '',
-        mode: "",
-        modes: ["clojure", "cmake", "css", "django", "dockerfile", "go", "html", "javascript", "jsx", 
-          "julia", "lua", "markdown", "nginx", "octave", "pascal", "perl", "php", "powershell",
-          "pug", "python", "r", "ruby", "rust", "sass", "shell", "sparql", "sql", "stylus", "swift", 
-          "vb", "vbscript", "vue", "xml", "yaml"
+        mode: '',
+        modes: [
+          'clojure', 'cmake', 'css', 'django', 'dockerfile', 'go', 'html', 'javascript', 'jsx', 
+          'julia', 'lua', 'markdown', 'nginx', 'octave', 'pascal', 'perl', 'php', 'powershell',
+          'pug', 'python', 'r', 'ruby', 'rust', 'sass', 'shell', 'sparql', 'sql', 'stylus', 'swift', 
+          'vb', 'vbscript', 'vue', 'xml', 'yaml'
         ],
         cmOptions: {
           tabSize: 4,
@@ -146,12 +149,17 @@
           styleSelectedText: false,
           line: true,
           showCursorWhenSelecting: true,
-          theme: "monokai",
+          theme: 'monokai',
           lineWrapping: true
         }
       }
     },
     mounted() {
+      // let routePath = window.location.pathname
+      // let filename = routePath.replace(/^.+[\/]/g, '')
+      // console.log(filename)
+      // let fileExtension = filename.split('.')
+      // console.log(fileExtension)
       this.setMode(this.mode)
     },
     sockets: {
@@ -160,14 +168,14 @@
         this.$socket.emit('room', this.roomName)
       },
       disconnect() {
-        console.log("Disconnected from "+this.room)
+        console.log('Disconnected from ' + this.room)
         this._id = null
         this.joined = null
       },
       room(status) {
         if (status === 'joined') {
           this.joined = true
-          console.log("Connected to "+this.room)
+          console.log('Connected to ' + this.room)
         }
       },
       filesList(files) {
@@ -175,6 +183,7 @@
         for (let file of files) {
           filesTree(root, file.split('/'))
         }
+
         this.nodes = filesTree2List(root)
       },
       updateRoomData(roomData) {
@@ -203,9 +212,9 @@
       },
       setMode(mode) {
         mode = mode.replace('html','htmlmixed')
-        import('codemirror/mode/'+mode+'/'+mode+'.js').then(()=>{
-          this.codemirror.setOption("mode", mode)
-          if (this.mode!="") {
+        import(`codemirror/mode/${mode}/${mode}.js`).then(()=>{
+          this.codemirror.setOption('mode', mode)
+          if (this.mode!=='') {
             this.$socket.emit('updateRoomData', {
               mode: this.mode,
               '_id': this._id
@@ -228,13 +237,28 @@
         }
       },
       onFileClick(ev) {
-        console.log("Click")
         let path = getPath(this.nodes, ev.path)
         if (path!==this.room) {
           window.location = '/'+path
         }
-      }
+      },
+      debouncedModeUpdate: _debounce((_this, newVal) => {
+        let language = detect(newVal)
+        if (language !== 'Unknown') {
+          _this.mode = language.toLowerCase()
+          _this.setMode(_this.mode)
+        } else {
+          _this.mode = 'markdown'
+          _this.setMode(_this.mode)
+        }
+      }, 500)
     },
+    watch: {
+      text (newVal) {
+        let _this = this
+        this.debouncedModeUpdate(this, newVal)
+      }
+    }
   }
 </script>
 
