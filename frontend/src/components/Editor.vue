@@ -155,11 +155,6 @@
       }
     },
     mounted() {
-      // let routePath = window.location.pathname
-      // let filename = routePath.replace(/^.+[\/]/g, '')
-      // console.log(filename)
-      // let fileExtension = filename.split('.')
-      // console.log(fileExtension)
       this.setMode(this.mode)
     },
     sockets: {
