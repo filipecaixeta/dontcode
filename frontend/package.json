@@ -9,7 +9,7 @@
   "dependencies": {
     "lodash-es": "^4.17.15",
     "program-language-detector": "^0.0.12",
-    "pug": "^2.0.3",
+    "pug": ">=3.0.1"
     "pug-plain-loader": "^1.0.0",
     "sl-vue-tree": "^1.8.3",
     "vue": "^2.5.17",
